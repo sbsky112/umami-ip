@@ -80,16 +80,23 @@ export function LoginForm() {
             <Turnstile
               siteKey={process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY || '1x00000000000000000000AA'}
               onSuccess={(token) => {
+                console.log('Turnstile success:', token);
                 setTurnstileToken(token);
                 setTurnstileError(null);
               }}
               onError={() => {
+                console.log('Turnstile error');
                 setTurnstileToken(null);
                 setTurnstileError('Verification failed. Please try again.');
               }}
               onExpire={() => {
+                console.log('Turnstile expired');
                 setTurnstileToken(null);
                 setTurnstileError('Verification expired. Please complete again.');
+              }}
+              scriptOptions={{
+                onLoad: () => console.log('Turnstile script loaded'),
+                onError: () => console.log('Turnstile script error'),
               }}
             />
             {turnstileError && (
