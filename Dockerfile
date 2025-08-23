@@ -24,7 +24,10 @@ COPY --from=deps /app/pnpm-lock.yaml ./pnpm-lock.yaml
 # Copy source code
 COPY . .
 
-ARG DATABASE_TYPE
+# Copy environment file if it exists
+COPY .env* .env* 2>/dev/null || true
+
+ARG DATABASE_TYPE=postgresql
 ARG BASE_PATH
 ARG COMMIT_SHA
 
@@ -33,9 +36,13 @@ ENV BASE_PATH=$BASE_PATH
 ENV COMMIT_SHA=$COMMIT_SHA
 ENV NEXT_TELEMETRY_DISABLED=1
 ENV NODE_OPTIONS=--max-old-space-size=4096
+ENV NODE_ENV=production
 
 # Build the application
-RUN npm run build-docker
+RUN pnpm run build-docker
+
+# Ensure Prisma client is properly generated
+RUN npx prisma generate
 
 # Production image, copy all the files and run next
 FROM node:22-alpine AS runner
