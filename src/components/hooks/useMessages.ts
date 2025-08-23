@@ -5,12 +5,6 @@ import { messages, labels } from '@/components/messages';
 export function useMessages(): any {
   const intl = useIntl();
 
-  const getMessage = (id: string) => {
-    const message = Object.values(messages).find(value => value.id === id);
-
-    return message ? intl.formatMessage(message) : id;
-  };
-
   const formatMessage = (
     descriptor: {
       id: string;
@@ -20,6 +14,12 @@ export function useMessages(): any {
     opts?: any,
   ) => {
     return descriptor ? intl.formatMessage(descriptor, values, opts) : null;
+  };
+
+  const getMessage = (id: string) => {
+    const message = Object.values(messages).find(value => value.id === id);
+
+    return message ? formatMessage(message) : id;
   };
 
   return { formatMessage, messages, labels, getMessage };
