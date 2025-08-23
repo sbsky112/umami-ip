@@ -1,0 +1,106 @@
+.container {
+  display: grid;
+  grid-template-columns: 300px 1fr;
+  gap: 40px;
+  margin-top: 20px;
+}
+
+.options {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.select,
+.input {
+  width: 100%;
+  padding: 8px 12px;
+  border: 1px solid var(--base400);
+  border-radius: 4px;
+  background: var(--base50);
+  color: var(--fontColor);
+}
+
+.colorPicker {
+  width: 50px;
+  height: 36px;
+  border: 1px solid var(--base400);
+  border-radius: 4px;
+  cursor: pointer;
+}
+
+.checkboxes {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-top: 8px;
+}
+
+.checkbox {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  cursor: pointer;
+}
+
+.previewSection {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.urlContainer {
+  display: flex;
+  gap: 10px;
+}
+
+.urlInput {
+  flex: 1;
+}
+
+.preview {
+  border: 1px solid var(--base400);
+  border-radius: 8px;
+  padding: 20px;
+  background: var(--base50);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  min-height: 200px;
+}
+
+.image {
+  max-width: 100%;
+  height: auto;
+  border-radius: 4px;
+}
+
+.markdownExample {
+  background: var(--base900);
+  border-radius: 4px;
+  padding: 16px;
+}
+
+.markdownExample h4 {
+  margin: 0 0 10px 0;
+  color: var(--fontColor100);
+}
+
+.markdownExample pre {
+  margin: 0;
+}
+
+.markdownExample code {
+  background: var(--base800);
+  padding: 8px 12px;
+  border-radius: 4px;
+  color: var(--primary400);
+  font-family: 'Consolas', 'Monaco', monospace;
+  font-size: 14px;
+}
+
+@media (max-width: 992px) {
+  .container {
+    grid-template-columns: 1fr;
+  }
+}
