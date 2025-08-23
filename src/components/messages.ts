@@ -457,6 +457,14 @@ export const messages = defineMessages({
     id: 'message.incorrect-username-password',
     defaultMessage: 'Incorrect username and/or password.',
   },
+  turnstileVerificationFailed: {
+    id: 'message.turnstile-verification-failed',
+    defaultMessage: 'Verification failed. Please complete the CAPTCHA.',
+  },
+  turnstileVerificationError: {
+    id: 'message.turnstile-verification-error',
+    defaultMessage: 'Verification error. Please try again.',
+  },
   noEventData: {
     id: 'message.no-event-data',
     defaultMessage: 'No event data is available.',

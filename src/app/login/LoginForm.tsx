@@ -9,6 +9,8 @@ import {
   Icon,
 } from 'react-basics';
 import { useRouter } from 'next/navigation';
+import { useState } from 'react';
+import { Turnstile } from '@marsidev/react-turnstile';
 import { useApi, useMessages } from '@/components/hooks';
 import { setUser } from '@/store/app';
 import { setClientAuthToken } from '@/lib/client';
@@ -19,12 +21,20 @@ export function LoginForm() {
   const { formatMessage, labels, getMessage } = useMessages();
   const router = useRouter();
   const { post, useMutation } = useApi();
+  const [turnstileToken, setTurnstileToken] = useState<string | null>(null);
+  const [turnstileError, setTurnstileError] = useState<string | null>(null);
+  
   const { mutate, error, isPending } = useMutation({
     mutationFn: (data: any) => post('/auth/login', data),
   });
 
   const handleSubmit = async (data: any) => {
-    mutate(data, {
+    if (!turnstileToken) {
+      setTurnstileError('Please complete the verification');
+      return;
+    }
+    
+    mutate({ ...data, turnstileToken }, {
       onSuccess: async ({ token, user }) => {
         setClientAuthToken(token);
         setUser(user);
@@ -32,6 +42,8 @@ export function LoginForm() {
         router.push('/dashboard');
       },
       onError: () => {
+        // Reset turnstile on error
+        setTurnstileToken(null);
         // The error message will be displayed by the Form component
         // through the error prop we're passing
       },
@@ -63,12 +75,34 @@ export function LoginForm() {
             <PasswordField />
           </FormInput>
         </FormRow>
+        <FormRow>
+          <div className={styles.turnstile}>
+            <Turnstile
+              siteKey={process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY || '1x00000000000000000000AA'}
+              onSuccess={(token) => {
+                setTurnstileToken(token);
+                setTurnstileError(null);
+              }}
+              onError={() => {
+                setTurnstileToken(null);
+                setTurnstileError('Verification failed. Please try again.');
+              }}
+              onExpire={() => {
+                setTurnstileToken(null);
+                setTurnstileError('Verification expired. Please complete again.');
+              }}
+            />
+            {turnstileError && (
+              <div className={styles.turnstileError}>{turnstileError}</div>
+            )}
+          </div>
+        </FormRow>
         <FormButtons>
           <SubmitButton
             data-test="button-submit"
             className={styles.button}
             variant="primary"
-            disabled={isPending}
+            disabled={isPending || !turnstileToken}
           >
             {formatMessage(labels.login)}
           </SubmitButton>

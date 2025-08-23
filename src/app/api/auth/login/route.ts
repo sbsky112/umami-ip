@@ -12,6 +12,22 @@ import debug from 'debug';
 
 const log = debug('umami:login');
 
+async function verifyTurnstileToken(token: string) {
+  const response = await fetch(
+    'https://challenges.cloudflare.com/turnstile/v0/siteverify',
+    {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/x-www-form-urlencoded',
+      },
+      body: `secret=${encodeURIComponent(process.env.TURNSTILE_SECRET_KEY!)}&response=${encodeURIComponent(token)}`,
+    }
+  );
+  
+  const data = await response.json();
+  return data;
+}
+
 export async function POST(request: Request) {
   try {
     // Check required environment variables
@@ -28,6 +44,7 @@ export async function POST(request: Request) {
     const schema = z.object({
       username: z.string().min(1, 'Username is required'),
       password: z.string().min(1, 'Password is required'),
+      turnstileToken: z.string().min(1, 'Turnstile verification is required'),
     });
 
     const { body, error } = await parseRequest(request, schema, { skipAuth: true });
@@ -36,9 +53,23 @@ export async function POST(request: Request) {
       return error();
     }
 
-    const { username, password } = body;
+    const { username, password, turnstileToken } = body;
 
     log(`Login attempt for username: ${username}`);
+
+    // Verify Turnstile token if secret key is configured
+    if (process.env.TURNSTILE_SECRET_KEY) {
+      try {
+        const verification = await verifyTurnstileToken(turnstileToken);
+        if (!verification.success) {
+          log(`Turnstile verification failed for user: ${username}`);
+          return unauthorized('message.turnstile-verification-failed');
+        }
+      } catch (error) {
+        log('Turnstile verification error:', error);
+        return unauthorized('message.turnstile-verification-error');
+      }
+    }
 
     // Check if database is accessible
     let user;
