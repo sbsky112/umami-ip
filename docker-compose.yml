@@ -8,6 +8,8 @@ services:
       DATABASE_URL: postgresql://umami:umami@db:5432/umami
       DATABASE_TYPE: postgresql
       APP_SECRET: replace-me-with-a-random-string
+      NEXT_PUBLIC_TURNSTILE_SITE_KEY: your_actual_site_key_here
+      TURNSTILE_SECRET_KEY: your_actual_secret_key_here
     depends_on:
       db:
         condition: service_healthy
