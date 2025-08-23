@@ -1,0 +1,58 @@
+version: '3.8'
+
+services:
+  umami:
+    build:
+      context: .
+      dockerfile: Dockerfile.dev
+      args:
+        DATABASE_TYPE: postgresql
+        BASE_PATH: 
+    image: umami:dev
+    container_name: umami-app-dev
+    ports:
+      - "3000:3000"
+    environment:
+      DATABASE_URL: postgresql://umami:umami@db:5432/umami
+      DATABASE_TYPE: postgresql
+      APP_SECRET: dev-secret-key
+      NODE_ENV: development
+      NEXT_PUBLIC_TURNSTILE_SITE_KEY: 
+      TURNSTILE_SECRET_KEY: 
+    volumes:
+      - .:/app
+      - /app/node_modules
+      - /app/.next
+    depends_on:
+      db:
+        condition: service_healthy
+    restart: unless-stopped
+    networks:
+      - umami-network
+
+  db:
+    image: postgres:15-alpine
+    container_name: umami-db-dev
+    environment:
+      POSTGRES_DB: umami
+      POSTGRES_USER: umami
+      POSTGRES_PASSWORD: umami
+    volumes:
+      - umami-db-data-dev:/var/lib/postgresql/data
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U $${POSTGRES_USER} -d $${POSTGRES_DB}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
+    networks:
+      - umami-network
+
+networks:
+  umami-network:
+    driver: bridge
+
+volumes:
+  umami-db-data-dev:
+    driver: local

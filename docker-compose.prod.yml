@@ -1,0 +1,61 @@
+version: '3.8'
+
+services:
+  umami:
+    image: umami:latest
+    container_name: umami-prod
+    ports:
+      - "3000:3000"
+    environment:
+      DATABASE_URL: ${DATABASE_URL}
+      DATABASE_TYPE: ${DATABASE_TYPE:-postgresql}
+      APP_SECRET: ${APP_SECRET}
+      NEXT_PUBLIC_TURNSTILE_SITE_KEY: ${NEXT_PUBLIC_TURNSTILE_SITE_KEY:-}
+      TURNSTILE_SECRET_KEY: ${TURNSTILE_SECRET_KEY:-}
+      NODE_ENV: production
+      BASE_PATH: ${BASE_PATH:-}
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD-SHELL", "wget --no-verbose --tries=1 --spider http://localhost:3000/api/heartbeat || exit 1"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+    volumes:
+      - umami-data:/app/data
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.umami.rule=Host(`${DOMAIN:-localhost}`)"
+      - "traefik.http.routers.umami.entrypoints=websecure"
+      - "traefik.http.routers.umami.tls.certresolver=myresolver"
+      - "traefik.http.services.umami.loadbalancer.server.port=3000"
+
+  # Optional: Traefik reverse proxy
+  traefik:
+    image: traefik:v2.10
+    container_name: umami-traefik
+    command:
+      - "--api.insecure=true"
+      - "--providers.docker=true"
+      - "--providers.docker.exposedbydefault=false"
+      - "--entrypoints.web.address=:80"
+      - "--entrypoints.websecure.address=:443"
+      - "--certificatesresolvers.myresolver.acme.tlschallenge=true"
+      - "--certificatesresolvers.myresolver.acme.email=${LETSENCRYPT_EMAIL:-}"
+      - "--certificatesresolvers.myresolver.acme.storage=/letsencrypt/acme.json"
+    ports:
+      - "80:80"
+      - "443:443"
+      - "8080:8080"
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+      - traefik-letsencrypt:/letsencrypt
+    restart: unless-stopped
+    depends_on:
+      - umami
+
+volumes:
+  umami-data:
+    driver: local
+  traefik-letsencrypt:
+    driver: local
