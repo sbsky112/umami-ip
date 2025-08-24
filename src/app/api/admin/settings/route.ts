@@ -60,7 +60,8 @@ export async function POST(request: NextRequest) {
       },
     });
 
-    if (body.turnstileSecretKey !== undefined) {
+    // Always save turnstileSecretKey if it's in the body (even if empty)
+    if ('turnstileSecretKey' in body) {
       await prisma.setting.upsert({
         where: { key: 'turnstile_secret_key' },
         update: { value: body.turnstileSecretKey },
