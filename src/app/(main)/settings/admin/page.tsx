@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { Button, Form, FormInput, FormRow, FormButtons, Switch, TextField } from 'react-basics';
+import { Button, Form, FormInput, FormRow, FormButtons, Toggle, TextField } from 'react-basics';
 import { useApi, useLogin, useMessages } from '@/components/hooks';
 import { useRouter } from 'next/navigation';
 
@@ -62,15 +62,15 @@ export default function AdminSettingsPage() {
     <div>
       <h1>{formatMessage(labels.settings)}</h1>
       <Form onSubmit={handleSubmit} error={error}>
-        <FormRow label="Enable Turnstile">
-          <Switch checked={turnstileEnabled} onChange={checked => setTurnstileEnabled(checked)} />
+        <FormRow label={formatMessage(labels.enableTurnstile)}>
+          <Toggle checked={turnstileEnabled} onChange={checked => setTurnstileEnabled(checked)} />
         </FormRow>
         {turnstileEnabled && (
-          <FormRow label="Turnstile Site Key">
+          <FormRow label={formatMessage(labels.turnstileSiteKey)}>
             <FormInput name="turnstileSiteKey" value={turnstileSiteKey}>
               <TextField
                 onChange={e => setTurnstileSiteKey(e.target.value)}
-                placeholder="Enter your Turnstile site key"
+                placeholder={formatMessage(labels.enterTurnstileSiteKey)}
               />
             </FormInput>
           </FormRow>
