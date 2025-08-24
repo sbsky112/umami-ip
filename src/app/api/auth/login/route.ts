@@ -41,7 +41,7 @@ export async function POST(request: Request) {
       return serverError('Application configuration error');
     }
 
-    // Check Turnstile settings from database
+    // Check Turnstile settings from database - default to disabled
     let turnstileSecretKey = null;
     let turnstileEnabled = false;
 
@@ -54,7 +54,7 @@ export async function POST(request: Request) {
       });
 
       turnstileEnabled = enabledSetting?.value === 'true';
-      turnstileSecretKey = secretSetting?.value || process.env.TURNSTILE_SECRET_KEY;
+      turnstileSecretKey = secretSetting?.value;
     } catch (error) {
       log('Error fetching Turnstile settings:', error);
     }

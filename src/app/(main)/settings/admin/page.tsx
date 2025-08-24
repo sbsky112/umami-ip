@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react';
 import { Button, Form, FormInput, FormRow, FormButtons, Toggle, TextField } from 'react-basics';
 import { useApi, useLogin, useMessages } from '@/components/hooks';
 import { useRouter } from 'next/navigation';
+import styles from './AdminSettingsPage.module.css';
 
 export default function AdminSettingsPage() {
   const { formatMessage, labels } = useMessages();
@@ -71,6 +72,12 @@ export default function AdminSettingsPage() {
             onChange={() => setTurnstileEnabled(!turnstileEnabled)}
           />
         </FormRow>
+        {turnstileEnabled && (
+          <div className={styles.description}>
+            Cloudflare Turnstile helps protect your login page from bots and automated attacks. You
+            need to sign up for a free account at cloudflare.com to get your site and secret keys.
+          </div>
+        )}
         {turnstileEnabled && (
           <>
             <FormRow label={formatMessage(labels.turnstileSiteKey)}>

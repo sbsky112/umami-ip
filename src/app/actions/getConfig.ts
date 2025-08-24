@@ -15,9 +15,9 @@ export type Config = {
 };
 
 export async function getConfig(): Promise<Config> {
-  // Get Turnstile settings from database
-  let turnstileEnabled = !!process.env.TURNSTILE_ENABLED;
-  let turnstileSiteKey = process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY;
+  // Get Turnstile settings from database - default to disabled
+  let turnstileEnabled = false;
+  let turnstileSiteKey;
 
   try {
     // Only try to read from database if we have a DATABASE_URL
@@ -39,7 +39,7 @@ export async function getConfig(): Promise<Config> {
       }
     }
   } catch {
-    // If database is not available, fall back to environment variables
+    // If database is not available, Turnstile remains disabled
   }
 
   return {

@@ -24,7 +24,7 @@ export function LoginForm() {
   const [turnstileToken, setTurnstileToken] = useState<string | null>(null);
   const [turnstileError, setTurnstileError] = useState<string | null>(null);
   const [turnstileEnabled, setTurnstileEnabled] = useState(false);
-  const [turnstileSiteKey, setTurnstileSiteKey] = useState('1x00000000000000000000AA');
+  const [turnstileSiteKey, setTurnstileSiteKey] = useState('');
 
   const { mutate, error, isPending } = useMutation({
     mutationFn: (data: any) => post('/auth/login', data),
@@ -36,7 +36,7 @@ export function LoginForm() {
       .then(res => res.json())
       .then(config => {
         setTurnstileEnabled(config.turnstileEnabled);
-        setTurnstileSiteKey(config.turnstileSiteKey || '1x00000000000000000000AA');
+        setTurnstileSiteKey(config.turnstileSiteKey || '');
       })
       .catch(() => {
         // Silently handle error
@@ -44,12 +44,12 @@ export function LoginForm() {
   }, []);
 
   const handleSubmit = async (data: any) => {
-    if (turnstileEnabled && !turnstileToken) {
+    if (turnstileEnabled && turnstileSiteKey && !turnstileToken) {
       setTurnstileError('Please complete the verification');
       return;
     }
 
-    const loginData = turnstileEnabled ? { ...data, turnstileToken } : data;
+    const loginData = turnstileEnabled && turnstileSiteKey ? { ...data, turnstileToken } : data;
 
     mutate(loginData, {
       onSuccess: async ({ token, user }) => {
@@ -60,7 +60,7 @@ export function LoginForm() {
       },
       onError: () => {
         // Reset turnstile on error
-        if (turnstileEnabled) {
+        if (turnstileEnabled && turnstileSiteKey) {
           setTurnstileToken(null);
         }
         // The error message will be displayed by the Form component
@@ -94,7 +94,7 @@ export function LoginForm() {
             <PasswordField />
           </FormInput>
         </FormRow>
-        {turnstileEnabled && (
+        {turnstileEnabled && turnstileSiteKey && (
           <FormRow>
             <div className={styles.turnstile}>
               <Turnstile
@@ -129,7 +129,7 @@ export function LoginForm() {
             data-test="button-submit"
             className={styles.button}
             variant="primary"
-            disabled={isPending || (turnstileEnabled && !turnstileToken)}
+            disabled={isPending || (turnstileEnabled && turnstileSiteKey && !turnstileToken)}
           >
             {formatMessage(labels.login)}
           </SubmitButton>
