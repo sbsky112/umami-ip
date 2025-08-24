@@ -83,6 +83,7 @@ export default function AdminSettingsPage() {
             <FormRow label={formatMessage(labels.turnstileSiteKey)}>
               <FormInput name="turnstileSiteKey" value={turnstileSiteKey}>
                 <TextField
+                  value={turnstileSiteKey}
                   onChange={e => setTurnstileSiteKey(e.target.value)}
                   placeholder={formatMessage(labels.enterTurnstileSiteKey)}
                 />
@@ -91,6 +92,7 @@ export default function AdminSettingsPage() {
             <FormRow label={formatMessage(labels.turnstileSecretKey)}>
               <FormInput name="turnstileSecretKey" value={turnstileSecretKey}>
                 <TextField
+                  value={turnstileSecretKey}
                   type="password"
                   onChange={e => setTurnstileSecretKey(e.target.value)}
                   placeholder={formatMessage(labels.enterTurnstileSecretKey)}
