@@ -48,7 +48,7 @@ export default function SessionInfo({ data }) {
           {data?.city}
         </dd>
 
-        <dt>IP地址</dt>
+        <dt>{formatMessage(labels.ipAddress)}</dt>
         <dd>
           <Icon>
             <Icons.Globe />

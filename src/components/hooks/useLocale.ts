@@ -21,11 +21,28 @@ export function useLocale() {
   const dateLocale = getDateLocale(locale);
 
   async function loadMessages(locale: string) {
-    // Add timestamp to prevent caching
-    const timestamp = Date.now();
-    const { data } = await httpGet(`${process.env.basePath || ''}/intl/messages/${locale}.json?t=${timestamp}`);
+    try {
+      // Add timestamp to prevent caching
+      const timestamp = Date.now();
+      const { data } = await httpGet(
+        `${process.env.basePath || ''}/intl/messages/${locale}.json?t=${timestamp}`,
+      );
 
-    messages[locale] = data;
+      if (data && typeof data === 'object') {
+        messages[locale] = data;
+      } else {
+        // Fallback to en-US if available
+        if (locale !== 'en-US' && messages['en-US']) {
+          messages[locale] = messages['en-US'];
+        }
+      }
+    } catch (error) {
+      // Silently fallback to en-US if loading fails
+      // Fallback to en-US if loading fails
+      if (locale !== 'en-US' && messages['en-US']) {
+        messages[locale] = messages['en-US'];
+      }
+    }
   }
 
   async function saveLocale(value: string) {

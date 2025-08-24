@@ -16,28 +16,34 @@ Before configuring Turnstile, you need to:
 
 ## Configuration
 
-### Using docker-compose.yml
+Turnstile is now configured through the Umami admin interface instead of environment variables. Here's how to set it up:
 
-1. Copy `docker-compose.yml` to your server
-2. Update the environment variables in the `umami` service:
+### Step 1: Deploy Umami
+
+Deploy Umami using Docker as usual. No Turnstile environment variables are needed:
 
 ```yaml
+# docker-compose.yml
 environment:
   DATABASE_URL: postgresql://umami:umami@db:5432/umami
   DATABASE_TYPE: postgresql
   APP_SECRET: your-random-secret-string-here
-  # Cloudflare Turnstile Configuration
-  NEXT_PUBLIC_TURNSTILE_SITE_KEY: 1x00000000000000000000AA
-  TURNSTILE_SECRET_KEY: 2x0000000000000000000000000000000AA
 ```
 
-Replace the placeholder values with your actual Turnstile keys.
+### Step 2: Configure Turnstile in Admin Settings
+
+1. Start your Umami instance
+2. Log in with an admin account
+3. Navigate to Settings → Admin Settings
+4. Enable the "Enable Turnstile" toggle
+5. Enter your Turnstile Site Key and Secret Key
+6. Click Save
 
 ### Using Podman
 
 1. Copy `podman-compose.yml` and `env.sample` to your server
 2. Rename `env.sample` to `.env`
-3. Update the environment variables:
+3. Update only the required environment variables:
 
 ```bash
 # Database Configuration
@@ -45,15 +51,13 @@ DATABASE_URL=postgresql://umami:replace-me-with-a-random-string@db:5432/umami
 DATABASE_TYPE=postgresql
 APP_SECRET=replace-me-with-a-random-string
 
-# Cloudflare Turnstile Configuration
-NEXT_PUBLIC_TURNSTILE_SITE_KEY=your_turnstile_site_key_here
-TURNSTILE_SECRET_KEY=your_turnstile_secret_key_here
-
 # Postgres Configuration
 POSTGRES_DB=umami
 POSTGRES_USER=umami
 POSTGRES_PASSWORD=replace-me-with-a-random-string
 ```
+
+Note: Turnstile environment variables are no longer required and can be omitted.
 
 ## Starting the Services
 
@@ -80,30 +84,44 @@ podman-compose up -d
 
 ### Turnstile Widget Not Visible
 
-1. Check that `NEXT_PUBLIC_TURNSTILE_SITE_KEY` is correctly set
-2. Ensure your Site Key is valid and not expired
+1. Check that Turnstile is enabled in Admin Settings
+2. Verify that your Site Key is correctly entered and valid
 3. Check browser console for any errors
+4. Ensure you have saved the settings after entering the keys
 
 ### Login Always Fails with Turnstile Error
 
-1. Verify that `TURNSTILE_SECRET_KEY` matches your Cloudflare dashboard
+1. Verify that your Secret Key matches your Cloudflare dashboard
 2. Ensure your server can reach `https://challenges.cloudflare.com`
 3. Check the application logs for detailed error messages
+4. Make sure both Site Key and Secret Key are properly saved in admin settings
 
-### Optional: Disable Turnstile
+### How to Disable Turnstile
 
 If you want to disable Turnstile verification:
 
-1. Remove or comment out the Turnstile environment variables
-2. Restart the container
-3. The login form will work without verification
+1. Log in with an admin account
+2. Navigate to Settings → Admin Settings
+3. Disable the "Enable Turnstile" toggle
+4. Click Save
+5. The login form will work without verification
+
+### Lost Your Turnstile Keys?
+
+If you've lost your Turnstile keys:
+
+1. Log in to your Cloudflare dashboard
+2. Navigate to Turnstile section
+3. Find your widget or create a new one
+4. Update the keys in Umami admin settings
 
 ## Security Considerations
 
 - Never commit your Turnstile keys to version control
-- Use environment variables or Docker secrets for sensitive data
+- Your Secret Key is stored encrypted in the database and is never exposed to the frontend
 - Regularly rotate your keys if you suspect they might be compromised
 - Monitor your Cloudflare dashboard for unusual activity
+- Only admin users can access and modify Turnstile settings
 
 ## Support
 

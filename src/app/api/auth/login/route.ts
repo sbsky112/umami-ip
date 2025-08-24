@@ -8,27 +8,27 @@ import { parseRequest } from '@/lib/request';
 import { saveAuth } from '@/lib/auth';
 import { secret } from '@/lib/crypto';
 import { ROLES } from '@/lib/constants';
+import { PrismaClient } from '@prisma/client';
 import debug from 'debug';
 
 const log = debug('umami:login');
 
-async function verifyTurnstileToken(token: string) {
-  const response = await fetch(
-    'https://challenges.cloudflare.com/turnstile/v0/siteverify',
-    {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/x-www-form-urlencoded',
-      },
-      body: `secret=${encodeURIComponent(process.env.TURNSTILE_SECRET_KEY!)}&response=${encodeURIComponent(token)}`,
-    }
-  );
-  
+async function verifyTurnstileToken(token: string, secretKey: string) {
+  const response = await fetch('https://challenges.cloudflare.com/turnstile/v0/siteverify', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/x-www-form-urlencoded',
+    },
+    body: `secret=${encodeURIComponent(secretKey)}&response=${encodeURIComponent(token)}`,
+  });
+
   const data = await response.json();
   return data;
 }
 
 export async function POST(request: Request) {
+  const prisma = new PrismaClient();
+
   try {
     // Check required environment variables
     if (!process.env.DATABASE_URL) {
@@ -41,11 +41,37 @@ export async function POST(request: Request) {
       return serverError('Application configuration error');
     }
 
-    const schema = z.object({
+    // Check Turnstile settings from database - default to disabled
+    let turnstileSecretKey = null;
+    let turnstileEnabled = false;
+
+    try {
+      const enabledSetting = await prisma.setting.findUnique({
+        where: { key: 'turnstile_enabled' },
+      });
+      const secretSetting = await prisma.setting.findUnique({
+        where: { key: 'turnstile_secret_key' },
+      });
+
+      turnstileEnabled = enabledSetting?.value === 'true';
+      turnstileSecretKey = secretSetting?.value;
+    } catch (error) {
+      log('Error fetching Turnstile settings:', error);
+    }
+
+    // Create base schema
+    const baseSchema = z.object({
       username: z.string().min(1, 'Username is required'),
       password: z.string().min(1, 'Password is required'),
-      turnstileToken: z.string().min(1, 'Turnstile verification is required'),
     });
+
+    // Add turnstileToken conditionally
+    const schema =
+      turnstileEnabled && turnstileSecretKey
+        ? baseSchema.extend({
+            turnstileToken: z.string().min(1, 'Turnstile verification is required'),
+          })
+        : baseSchema;
 
     const { body, error } = await parseRequest(request, schema, { skipAuth: true });
 
@@ -57,10 +83,10 @@ export async function POST(request: Request) {
 
     log(`Login attempt for username: ${username}`);
 
-    // Verify Turnstile token if secret key is configured
-    if (process.env.TURNSTILE_SECRET_KEY) {
+    // Verify Turnstile token if enabled and secret key is configured
+    if (turnstileEnabled && turnstileSecretKey && turnstileToken) {
       try {
-        const verification = await verifyTurnstileToken(turnstileToken);
+        const verification = await verifyTurnstileToken(turnstileToken, turnstileSecretKey);
         if (!verification.success) {
           log(`Turnstile verification failed for user: ${username}`);
           return unauthorized('message.turnstile-verification-failed');
