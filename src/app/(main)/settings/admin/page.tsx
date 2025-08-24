@@ -41,7 +41,7 @@ export default function AdminSettingsPage() {
   const handleSubmit = async () => {
     mutate(
       {
-        turnstileEnabled: turnstileEnabled.toString(),
+        turnstileEnabled: Boolean(turnstileEnabled).toString(),
         turnstileSiteKey,
         turnstileSecretKey,
       },
@@ -66,7 +66,10 @@ export default function AdminSettingsPage() {
       <h1>{formatMessage(labels.settings)}</h1>
       <Form onSubmit={handleSubmit} error={error}>
         <FormRow label={formatMessage(labels.enableTurnstile)}>
-          <Toggle checked={turnstileEnabled} onChange={checked => setTurnstileEnabled(checked)} />
+          <Toggle
+            checked={turnstileEnabled}
+            onChange={() => setTurnstileEnabled(!turnstileEnabled)}
+          />
         </FormRow>
         {turnstileEnabled && (
           <>
