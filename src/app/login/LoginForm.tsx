@@ -9,7 +9,7 @@ import {
   Icon,
 } from 'react-basics';
 import { useRouter } from 'next/navigation';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Turnstile } from '@marsidev/react-turnstile';
 import { useApi, useMessages } from '@/components/hooks';
 import { setUser } from '@/store/app';
@@ -23,18 +23,35 @@ export function LoginForm() {
   const { post, useMutation } = useApi();
   const [turnstileToken, setTurnstileToken] = useState<string | null>(null);
   const [turnstileError, setTurnstileError] = useState<string | null>(null);
-  
+  const [turnstileEnabled, setTurnstileEnabled] = useState(false);
+  const [turnstileSiteKey, setTurnstileSiteKey] = useState('1x00000000000000000000AA');
+
   const { mutate, error, isPending } = useMutation({
     mutationFn: (data: any) => post('/auth/login', data),
   });
 
+  useEffect(() => {
+    // Fetch config to check if Turnstile is enabled
+    fetch('/api/config')
+      .then(res => res.json())
+      .then(config => {
+        setTurnstileEnabled(config.turnstileEnabled);
+        setTurnstileSiteKey(config.turnstileSiteKey || '1x00000000000000000000AA');
+      })
+      .catch(() => {
+        // Silently handle error
+      });
+  }, []);
+
   const handleSubmit = async (data: any) => {
-    if (!turnstileToken) {
+    if (turnstileEnabled && !turnstileToken) {
       setTurnstileError('Please complete the verification');
       return;
     }
-    
-    mutate({ ...data, turnstileToken }, {
+
+    const loginData = turnstileEnabled ? { ...data, turnstileToken } : data;
+
+    mutate(loginData, {
       onSuccess: async ({ token, user }) => {
         setClientAuthToken(token);
         setUser(user);
@@ -43,7 +60,9 @@ export function LoginForm() {
       },
       onError: () => {
         // Reset turnstile on error
-        setTurnstileToken(null);
+        if (turnstileEnabled) {
+          setTurnstileToken(null);
+        }
         // The error message will be displayed by the Form component
         // through the error prop we're passing
       },
@@ -75,41 +94,42 @@ export function LoginForm() {
             <PasswordField />
           </FormInput>
         </FormRow>
-        <FormRow>
-          <div className={styles.turnstile}>
-            <Turnstile
-              siteKey={process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY || '1x00000000000000000000AA'}
-              onSuccess={(token) => {
-                console.log('Turnstile success:', token);
-                setTurnstileToken(token);
-                setTurnstileError(null);
-              }}
-              onError={() => {
-                console.log('Turnstile error');
-                setTurnstileToken(null);
-                setTurnstileError('Verification failed. Please try again.');
-              }}
-              onExpire={() => {
-                console.log('Turnstile expired');
-                setTurnstileToken(null);
-                setTurnstileError('Verification expired. Please complete again.');
-              }}
-              scriptOptions={{
-                onLoad: () => console.log('Turnstile script loaded'),
-                onError: () => console.log('Turnstile script error'),
-              }}
-            />
-            {turnstileError && (
-              <div className={styles.turnstileError}>{turnstileError}</div>
-            )}
-          </div>
-        </FormRow>
+        {turnstileEnabled && (
+          <FormRow>
+            <div className={styles.turnstile}>
+              <Turnstile
+                siteKey={turnstileSiteKey}
+                onSuccess={token => {
+                  setTurnstileToken(token);
+                  setTurnstileError(null);
+                }}
+                onError={() => {
+                  setTurnstileToken(null);
+                  setTurnstileError('Verification failed. Please try again.');
+                }}
+                onExpire={() => {
+                  setTurnstileToken(null);
+                  setTurnstileError('Verification expired. Please complete again.');
+                }}
+                scriptOptions={{
+                  onLoad: () => {
+                    // Script loaded
+                  },
+                  onError: () => {
+                    // Script error
+                  },
+                }}
+              />
+              {turnstileError && <div className={styles.turnstileError}>{turnstileError}</div>}
+            </div>
+          </FormRow>
+        )}
         <FormButtons>
           <SubmitButton
             data-test="button-submit"
             className={styles.button}
             variant="primary"
-            disabled={isPending || !turnstileToken}
+            disabled={isPending || (turnstileEnabled && !turnstileToken)}
           >
             {formatMessage(labels.login)}
           </SubmitButton>
