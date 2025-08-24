@@ -44,6 +44,8 @@ cp .env.example .env
 DATABASE_URL=postgresql://username:password@localhost:5432/umami
 DATABASE_TYPE=postgresql
 APP_SECRET=your-secret-key
+NEXT_PUBLIC_TURNSTILE_SITE_KEY=your-site-key-here
+TURNSTILE_SECRET_KEY=your-secret-key-here
 ```
 
 4. **设置数据库**
@@ -92,6 +94,52 @@ umamisoftware/umami:mysql-latest
 - `DISABLE_LOGIN`：禁用登录页面（默认值：false）
 - `FORCE_SSL`：强制使用 HTTPS（默认值：false）
 
+### 语言设置
+
+Umami 支持 46 种语言，包括：
+
+- 中文（简体、繁体）
+- 英语（美国、英国）
+- 日语、韩语
+- 阿拉伯语、希伯来语（支持从右到左显示）
+- 西班牙语、法语、德语、意大利语
+- 俄语、乌克兰语
+- 以及更多语言...
+
+#### 如何切换语言
+
+1. **个人设置中切换**：
+   - 点击右上角的个人资料头像
+   - 选择"设置"（Settings）
+   - 在"语言"（Language）下拉菜单中选择您偏好的语言
+   - 点击"保存"（Save）
+
+2. **使用语言按钮**：
+   - 在界面中找到地球图标 🌐
+   - 点击图标打开语言选择菜单
+   - 从列表中选择您的语言
+
+#### 自动语言检测
+
+- Umami 会根据您的浏览器语言设置自动选择合适的语言
+- 如果浏览器语言不在支持列表中，将默认使用英语（en-US）
+
+#### 添加新语言
+
+要添加新的语言支持：
+
+1. 在 `src/lang/` 目录下创建新的语言文件
+2. 翻译所有文本内容
+3. 在 `src/lib/lang.ts` 中注册新语言
+4. 提交拉取请求
+
+### 日期和时间格式
+
+Umami 会根据所选语言自动调整：
+- 日期格式（如 YYYY-MM-DD 或 DD/MM/YYYY）
+- 时间格式（12小时制或24小时制）
+- 数字格式（千位分隔符等）
+
 ### 跟踪代码
 
 将此脚本添加到您网站的 `<head>` 部分：
@@ -120,6 +168,29 @@ npm run dev
 - `npm run start` - 启动生产服务器
 - `npm run build-db` - 构建数据库客户端
 - `npm run check-db` - 检查数据库连接
+
+### 故障排除
+
+#### Docker 构建问题
+
+如果遇到 `frozen-lockfile` 错误：
+
+```bash
+# 更新 pnpm-lock.yaml
+pnpm install
+
+# 然后重新构建
+docker build .
+```
+
+#### 语言显示问题
+
+如果遇到语言切换问题或空白下拉菜单：
+
+1. 确保浏览器控制台没有错误
+2. 检查网络连接，语言文件需要从服务器加载
+3. 尝试清除浏览器缓存和 Cookie
+4. 如果问题持续，请提交 issue
 
 ## 贡献
 
