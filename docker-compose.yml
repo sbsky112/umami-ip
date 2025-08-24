@@ -1,90 +1,40 @@
 ---
-version: '3.8'
-
 services:
   umami:
-    build:
-      context: .
-      dockerfile: Dockerfile
-      args:
-        DATABASE_TYPE: postgresql
-        BASE_PATH: 
-        NODE_OPTIONS: --max-old-space-size=4096
-    image: umami:local
-    container_name: umami-app
+    image: sbsky112/umami-ip-feature:v2.19.0-postgres
     ports:
       - "3000:3000"
     environment:
-      DATABASE_URL: postgresql://umami:${POSTGRES_PASSWORD:-umami}@db:5432/umami
+      DATABASE_URL: postgresql://umami:umami@db:5432/umami
       DATABASE_TYPE: postgresql
-      APP_SECRET: ${APP_SECRET:-replace-me-with-a-random-string}
-      NEXT_PUBLIC_TURNSTILE_SITE_KEY: ${TURNSTILE_SITE_KEY:-}
-      TURNSTILE_SECRET_KEY: ${TURNSTILE_SECRET_KEY:-}
-      NODE_ENV: production
+      APP_SECRET: replace-me-with-a-random-string
+      # Cloudflare Turnstile Configuration (Optional)
+      # Get your keys from: https://dash.cloudflare.com/?to=/:account/turnstile
+      NEXT_PUBLIC_TURNSTILE_SITE_KEY: your_turnstile_site_key_here
+      TURNSTILE_SECRET_KEY: your_turnstile_secret_key_here
     depends_on:
       db:
         condition: service_healthy
-    restart: unless-stopped
+    init: true
+    restart: always
     healthcheck:
-      test: ["CMD-SHELL", "wget --no-verbose --tries=1 --spider http://localhost:3000/api/heartbeat || exit 1"]
-      interval: 30s
-      timeout: 10s
-      retries: 3
-      start_period: 40s
-    networks:
-      - umami-network
-    volumes:
-      - umami-data:/app/data
-
+      test: ["CMD-SHELL", "curl http://localhost:3000/api/heartbeat"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
   db:
     image: postgres:15-alpine
-    container_name: umami-db
     environment:
       POSTGRES_DB: umami
       POSTGRES_USER: umami
-      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-umami}
-      POSTGRES_INITDB_ARGS: "--encoding=UTF-8"
+      POSTGRES_PASSWORD: umami
     volumes:
       - umami-db-data:/var/lib/postgresql/data
-      - ./docker/postgres:/docker-entrypoint-initdb.d:ro
-    restart: unless-stopped
+    restart: always
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U $${POSTGRES_USER} -d $${POSTGRES_DB}"]
-      interval: 30s
-      timeout: 10s
+      interval: 5s
+      timeout: 5s
       retries: 5
-      start_period: 30s
-    networks:
-      - umami-network
-    sysctls:
-      - kernel.shmmax=2147483648
-
-  # Optional: Redis for caching (uncomment if needed)
-  # redis:
-  #   image: redis:7-alpine
-  #   container_name: umami-redis
-  #   restart: unless-stopped
-  #   healthcheck:
-  #     test: ["CMD", "redis-cli", "ping"]
-  #     interval: 30s
-  #     timeout: 10s
-  #     retries: 3
-  #   networks:
-  #     - umami-network
-  #   volumes:
-  #     - umami-redis-data:/data
-
-networks:
-  umami-network:
-    driver: bridge
-    ipam:
-      config:
-        - subnet: 172.20.0.0/16
-
 volumes:
   umami-db-data:
-    driver: local
-  umami-data:
-    driver: local
-  # umami-redis-data:
-  #   driver: local

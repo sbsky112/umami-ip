@@ -10,6 +10,9 @@ services:
       DATABASE_URL: ${DATABASE_URL}
       DATABASE_TYPE: ${DATABASE_TYPE}
       APP_SECRET: ${APP_SECRET}
+      # Cloudflare Turnstile Configuration (Optional)
+      NEXT_PUBLIC_TURNSTILE_SITE_KEY: ${NEXT_PUBLIC_TURNSTILE_SITE_KEY}
+      TURNSTILE_SECRET_KEY: ${TURNSTILE_SECRET_KEY}
     depends_on:
       db:
         condition: service_healthy
