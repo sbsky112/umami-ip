@@ -12,6 +12,7 @@ export default function AdminSettingsPage() {
   const router = useRouter();
   const [turnstileEnabled, setTurnstileEnabled] = useState(false);
   const [turnstileSiteKey, setTurnstileSiteKey] = useState('');
+  const [turnstileSecretKey, setTurnstileSecretKey] = useState('');
   const [loading, setLoading] = useState(true);
 
   const { mutate, error, isPending } = useMutation({
@@ -24,6 +25,7 @@ export default function AdminSettingsPage() {
         const res = await get('/admin/settings');
         setTurnstileEnabled(res.turnstileEnabled === 'true');
         setTurnstileSiteKey(res.turnstileSiteKey || '');
+        setTurnstileSecretKey(res.turnstileSecretKey || '');
       } catch {
         // Silently handle error
       } finally {
@@ -41,6 +43,7 @@ export default function AdminSettingsPage() {
       {
         turnstileEnabled: turnstileEnabled.toString(),
         turnstileSiteKey,
+        turnstileSecretKey,
       },
       {
         onSuccess: () => {
@@ -66,14 +69,25 @@ export default function AdminSettingsPage() {
           <Toggle checked={turnstileEnabled} onChange={checked => setTurnstileEnabled(checked)} />
         </FormRow>
         {turnstileEnabled && (
-          <FormRow label={formatMessage(labels.turnstileSiteKey)}>
-            <FormInput name="turnstileSiteKey" value={turnstileSiteKey}>
-              <TextField
-                onChange={e => setTurnstileSiteKey(e.target.value)}
-                placeholder={formatMessage(labels.enterTurnstileSiteKey)}
-              />
-            </FormInput>
-          </FormRow>
+          <>
+            <FormRow label={formatMessage(labels.turnstileSiteKey)}>
+              <FormInput name="turnstileSiteKey" value={turnstileSiteKey}>
+                <TextField
+                  onChange={e => setTurnstileSiteKey(e.target.value)}
+                  placeholder={formatMessage(labels.enterTurnstileSiteKey)}
+                />
+              </FormInput>
+            </FormRow>
+            <FormRow label={formatMessage(labels.turnstileSecretKey)}>
+              <FormInput name="turnstileSecretKey" value={turnstileSecretKey}>
+                <TextField
+                  type="password"
+                  onChange={e => setTurnstileSecretKey(e.target.value)}
+                  placeholder={formatMessage(labels.enterTurnstileSecretKey)}
+                />
+              </FormInput>
+            </FormRow>
+          </>
         )}
         <FormButtons>
           <Button type="submit" variant="primary" disabled={isPending}>

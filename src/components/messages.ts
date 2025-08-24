@@ -209,6 +209,11 @@ export const labels = defineMessages({
     id: 'label.enter-turnstile-site-key',
     defaultMessage: 'Enter your Turnstile site key',
   },
+  turnstileSecretKey: { id: 'label.turnstile-secret-key', defaultMessage: 'Turnstile Secret Key' },
+  enterTurnstileSecretKey: {
+    id: 'label.enter-turnstile-secret-key',
+    defaultMessage: 'Enter your Turnstile secret key',
+  },
   dimensions: { id: 'label.dimensions', defaultMessage: 'Dimensions' },
   options: { id: 'label.options', defaultMessage: 'Options' },
   primaryColor: { id: 'label.primary-color', defaultMessage: 'Primary Color' },

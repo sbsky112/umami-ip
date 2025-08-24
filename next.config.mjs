@@ -180,6 +180,10 @@ if (cloudMode && cloudUrl) {
 /** @type {import('next').NextConfig} */
 export default {
   reactStrictMode: false,
+  experimental: {
+    outputFileTracingRoot: process.cwd(),
+    symlink: false,
+  },
   env: {
     basePath,
     cloudMode,
