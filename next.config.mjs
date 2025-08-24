@@ -180,11 +180,7 @@ if (cloudMode && cloudUrl) {
 /** @type {import('next').NextConfig} */
 export default {
   reactStrictMode: false,
-  experimental: {
-    outputFileTracingRoot: process.cwd(),
-    symlink: false,
-  },
-  swcMinify: false,
+  experimental: {},
   env: {
     basePath,
     cloudMode,
@@ -193,7 +189,7 @@ export default {
     defaultLocale,
   },
   basePath,
-  output: 'standalone',
+  // output: 'standalone', // Disabled to avoid symlink issues on Windows
   eslint: {
     ignoreDuringBuilds: true,
   },
