@@ -50,15 +50,18 @@ export async function POST(request: NextRequest) {
       },
     });
 
-    await prisma.setting.upsert({
-      where: { key: 'turnstile_site_key' },
-      update: { value: body.turnstileSiteKey },
-      create: {
-        id: crypto.randomUUID(),
-        key: 'turnstile_site_key',
-        value: body.turnstileSiteKey,
-      },
-    });
+    // Save turnstileSiteKey if it's in the body
+    if ('turnstileSiteKey' in body) {
+      await prisma.setting.upsert({
+        where: { key: 'turnstile_site_key' },
+        update: { value: body.turnstileSiteKey },
+        create: {
+          id: crypto.randomUUID(),
+          key: 'turnstile_site_key',
+          value: body.turnstileSiteKey,
+        },
+      });
+    }
 
     // Always save turnstileSecretKey if it's in the body (even if empty)
     if ('turnstileSecretKey' in body) {
