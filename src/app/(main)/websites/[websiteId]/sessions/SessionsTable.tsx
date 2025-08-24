@@ -29,7 +29,7 @@ export function SessionsTable({ data = [] }: { data: any[]; showDomain?: boolean
         )}
       </GridColumn>
       <GridColumn name="city" label={formatMessage(labels.city)} />
-      <GridColumn name="ipAddress" label="IP地址" />
+      <GridColumn name="ipAddress" label={formatMessage(labels.ipAddress)} />
       <GridColumn name="browser" label={formatMessage(labels.browser)}>
         {row => (
           <TypeIcon type="browser" value={row.browser}>

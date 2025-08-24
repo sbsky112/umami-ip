@@ -34,54 +34,66 @@ export function DateFilter({
   const [showPicker, setShowPicker] = useState(false);
   const { locale } = useLocale();
 
+  // Safety wrapper for formatMessage to prevent undefined labels
+  const safeFormatMessage = (descriptor: any, values?: any) => {
+    try {
+      const result = formatMessage(descriptor, values);
+      return result || descriptor?.defaultMessage || descriptor?.id || 'Unknown';
+    } catch (error) {
+      return descriptor?.defaultMessage || descriptor?.id || 'Unknown';
+    }
+  };
+
   const options = [
-    { label: formatMessage(labels.today), value: '0day' },
+    { label: safeFormatMessage(labels.today), value: '0day' },
     {
-      label: formatMessage(labels.lastHours, { x: 24 }),
+      label: safeFormatMessage(labels.lastHours, { x: 24 }),
       value: '24hour',
     },
     {
-      label: formatMessage(labels.thisWeek),
+      label: safeFormatMessage(labels.thisWeek),
       value: '0week',
       divider: true,
     },
     {
-      label: formatMessage(labels.lastDays, { x: 7 }),
+      label: safeFormatMessage(labels.lastDays, { x: 7 }),
       value: '7day',
     },
     {
-      label: formatMessage(labels.thisMonth),
+      label: safeFormatMessage(labels.thisMonth),
       value: '0month',
       divider: true,
     },
     {
-      label: formatMessage(labels.lastDays, { x: 30 }),
+      label: safeFormatMessage(labels.lastDays, { x: 30 }),
       value: '30day',
     },
     {
-      label: formatMessage(labels.lastDays, { x: 90 }),
+      label: safeFormatMessage(labels.lastDays, { x: 90 }),
       value: '90day',
     },
-    { label: formatMessage(labels.thisYear), value: '0year', divider: true },
+    { label: safeFormatMessage(labels.thisYear), value: '0year', divider: true },
     {
-      label: formatMessage(labels.lastMonths, { x: 6 }),
+      label: safeFormatMessage(labels.lastMonths, { x: 6 }),
       value: '6month',
     },
     {
-      label: formatMessage(labels.lastMonths, { x: 12 }),
+      label: safeFormatMessage(labels.lastMonths, { x: 12 }),
       value: '12month',
     },
     showAllTime && {
-      label: formatMessage(labels.allTime),
+      label: safeFormatMessage(labels.allTime),
       value: 'all',
       divider: true,
     },
     {
-      label: formatMessage(labels.customRange),
+      label: safeFormatMessage(labels.customRange),
       value: 'custom',
       divider: true,
     },
-  ].filter(n => n);
+  ]
+    .filter(Boolean)
+    .filter(option => option && option.label && option.value);
 
   const handleChange = (value: string) => {
     if (value === 'custom') {
@@ -131,7 +143,7 @@ export function DateFilter({
         renderValue={renderValue}
         value={value}
         alignment={alignment}
-        placeholder={formatMessage(labels.selectDate)}
+        placeholder={safeFormatMessage(labels.selectDate)}
         onChange={key => handleChange(key as any)}
       >
         {({ label, value, divider }) => (
