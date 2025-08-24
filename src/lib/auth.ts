@@ -320,15 +320,20 @@ export async function hasPermission(role: string, permission: string | string[])
   return ensureArray(permission).some(e => ROLE_PERMISSIONS[role]?.includes(e));
 }
 
+export async function isAdmin(request?: Request) {
+  const auth = await checkAuth(request || new Request('http://localhost'));
+  return auth?.user?.isAdmin || false;
+}
+
 export async function getShareToken(shareId: string) {
   const { getSharedWebsite } = await import('@/queries/prisma/website');
-  
+
   const website = await getSharedWebsite(shareId);
-  
+
   if (!website) {
     return null;
   }
-  
+
   return {
     websiteId: website.id,
   };

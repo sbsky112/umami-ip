@@ -4,8 +4,8 @@ import { PrismaClient } from '@prisma/client';
 
 const prisma = new PrismaClient();
 
-export async function GET() {
-  if (!(await auth.isAdmin())) {
+export async function GET(request: NextRequest) {
+  if (!(await auth.isAdmin(request))) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   }
 
@@ -19,9 +19,14 @@ export async function GET() {
       where: { key: 'turnstile_site_key' },
     });
 
+    const turnstileSecretKey = await prisma.setting.findUnique({
+      where: { key: 'turnstile_secret_key' },
+    });
+
     return NextResponse.json({
       turnstileEnabled: turnstileEnabled?.value || 'false',
       turnstileSiteKey: turnstileSiteKey?.value || '',
+      turnstileSecretKey: turnstileSecretKey?.value || '',
     });
   } catch (error) {
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
@@ -29,7 +34,7 @@ export async function GET() {
 }
 
 export async function POST(request: NextRequest) {
-  if (!(await auth.isAdmin())) {
+  if (!(await auth.isAdmin(request))) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   }
 
@@ -56,6 +61,18 @@ export async function POST(request: NextRequest) {
         value: body.turnstileSiteKey,
       },
     });
+
+    if (body.turnstileSecretKey !== undefined) {
+      await prisma.setting.upsert({
+        where: { key: 'turnstile_secret_key' },
+        update: { value: body.turnstileSecretKey },
+        create: {
+          id: crypto.randomUUID(),
+          key: 'turnstile_secret_key',
+          value: body.turnstileSecretKey,
+        },
+      });
+    }
 
     return NextResponse.json({ success: true });
   } catch {
