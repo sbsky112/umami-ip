@@ -184,6 +184,7 @@ export default {
     outputFileTracingRoot: process.cwd(),
     symlink: false,
   },
+  swcMinify: false,
   env: {
     basePath,
     cloudMode,
