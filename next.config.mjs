@@ -23,8 +23,13 @@ const contentSecurityPolicy = [
   `script-src 'self' 'unsafe-eval' 'unsafe-inline' https://challenges.cloudflare.com`,
   `style-src 'self' 'unsafe-inline'`,
   `connect-src 'self' api.umami.is cloud.umami.is https://challenges.cloudflare.com`,
+<<<<<<< HEAD
   `frame-src https://challenges.cloudflare.com`,
+=======
+  `frame-src 'self' https://challenges.cloudflare.com`,
+>>>>>>> dev
   `frame-ancestors 'self' ${frameAncestors}`,
+  `prefetch-src 'self' https://challenges.cloudflare.com`,
 ];
 
 const defaultHeaders = [

@@ -8,7 +8,12 @@ import { parseRequest } from '@/lib/request';
 import { saveAuth } from '@/lib/auth';
 import { secret } from '@/lib/crypto';
 import { ROLES } from '@/lib/constants';
+<<<<<<< HEAD
 import { PrismaClient } from '@prisma/client';
+=======
+import { verifyTurnstileToken } from '@/lib/turnstile';
+import { getTurnstileSettings } from '@/queries/settings';
+>>>>>>> dev
 import debug from 'debug';
 
 const log = debug('umami:login');
@@ -63,6 +68,7 @@ export async function POST(request: Request) {
     const baseSchema = z.object({
       username: z.string().min(1, 'Username is required'),
       password: z.string().min(1, 'Password is required'),
+      turnstileToken: z.string().optional(),
     });
 
     // Add turnstileToken conditionally
@@ -83,6 +89,7 @@ export async function POST(request: Request) {
 
     log(`Login attempt for username: ${username}`);
 
+<<<<<<< HEAD
     // Verify Turnstile token if enabled and secret key is configured
     if (turnstileEnabled && turnstileSecretKey && turnstileToken) {
       try {
@@ -94,6 +101,25 @@ export async function POST(request: Request) {
       } catch (error) {
         log('Turnstile verification error:', error);
         return unauthorized('message.turnstile-verification-error');
+=======
+    // Verify Turnstile token if enabled
+    const clientIp =
+      request.headers.get('x-forwarded-for') || request.headers.get('x-real-ip') || 'unknown';
+
+    // Check if Turnstile is enabled
+    const settings = await getTurnstileSettings();
+
+    if (settings.enabled) {
+      if (!turnstileToken) {
+        log(`Turnstile token missing for user: ${username}`);
+        return unauthorized('CAPTCHA verification required');
+      }
+
+      const isValidTurnstile = await verifyTurnstileToken(turnstileToken, clientIp);
+      if (!isValidTurnstile) {
+        log(`Turnstile verification failed for user: ${username}`);
+        return unauthorized('CAPTCHA verification failed');
+>>>>>>> dev
       }
     }
 

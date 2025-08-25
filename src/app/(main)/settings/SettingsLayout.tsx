@@ -20,9 +20,15 @@ export default function SettingsLayout({ children }: { children: ReactNode }) {
       url: '/settings/users',
     },
     user.isAdmin && {
+<<<<<<< HEAD
       key: 'admin',
       label: 'Admin Settings',
       url: '/settings/admin',
+=======
+      key: 'global',
+      label: 'Global Settings',
+      url: '/settings/global',
+>>>>>>> dev
     },
   ].filter(n => n);
 

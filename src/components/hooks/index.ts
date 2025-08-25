@@ -46,3 +46,4 @@ export * from './useSticky';
 export * from './useTeamUrl';
 export * from './useTheme';
 export * from './useTimezone';
+export * from './useTurnstileSettings';

@@ -1,17 +1,14 @@
----
 services:
   umami:
-    image: sbsky112/umami-ip-feature:v2.19.0-postgres
+    image: sbsky112/umami-ip-feature:v2.19.3-mysql
     ports:
       - "3000:3000"
     environment:
-      DATABASE_URL: postgresql://umami:umami@db:5432/umami
-      DATABASE_TYPE: postgresql
+      DATABASE_URL: mysql://umami:umami@db:3306/umami
+      DATABASE_TYPE: mysql
       APP_SECRET: replace-me-with-a-random-string
-      # Cloudflare Turnstile Configuration (Optional)
-      # Get your keys from: https://dash.cloudflare.com/?to=/:account/turnstile
-      NEXT_PUBLIC_TURNSTILE_SITE_KEY: your_turnstile_site_key_here
-      TURNSTILE_SECRET_KEY: your_turnstile_secret_key_here
+      TRACKER_SCRIPT_NAME: tongji.js  # 自定义追踪脚本名
+      COLLECT_API_ENDPOINT: /api/site  # 自定义数据收集路径
     depends_on:
       db:
         condition: service_healthy
@@ -22,19 +19,22 @@ services:
       interval: 5s
       timeout: 5s
       retries: 5
+  
   db:
-    image: postgres:15-alpine
+    image: mysql:8.0  # 修改为 mysql:8.0
     environment:
-      POSTGRES_DB: umami
-      POSTGRES_USER: umami
-      POSTGRES_PASSWORD: umami
+      MYSQL_ROOT_PASSWORD: rootpassword
+      MYSQL_DATABASE: umami
+      MYSQL_USER: umami
+      MYSQL_PASSWORD: umami
     volumes:
-      - umami-db-data:/var/lib/postgresql/data
+      - umami-db-data:/var/lib/mysql
     restart: always
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U $${POSTGRES_USER} -d $${POSTGRES_DB}"]
+      test: ["CMD-SHELL", "mysqladmin ping -h localhost --password=$$MYSQL_PASSWORD"]
       interval: 5s
       timeout: 5s
       retries: 5
+
 volumes:
   umami-db-data:
