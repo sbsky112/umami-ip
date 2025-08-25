@@ -14,6 +14,7 @@
 - 🏷️ **事件追踪**：追踪自定义事件
 - 📈 **漏斗分析**：了解转化率
 - 🔄 **数据导出**：以多种格式导出数据
+- 🛡️ **登录保护**：集成 Cloudflare Turnstile 验证码，防止自动化攻击
 
 ## 入门指南
 
@@ -91,6 +92,39 @@ umamisoftware/umami:mysql-latest
 - `APP_SECRET`：用于签名会话的密钥
 - `DISABLE_LOGIN`：禁用登录页面（默认值：false）
 - `FORCE_SSL`：强制使用 HTTPS（默认值：false）
+
+### Cloudflare Turnstile 配置
+
+Umami 现已集成 Cloudflare Turnstile 验证码功能，用于保护登录页面免受自动化攻击。
+
+#### 启用 Turnstile
+
+1. 登录到 Umami 管理后台
+2. 进入 **设置** > **全局设置**
+3. 找到 **登录保护** 部分
+4. 启用 **Turnstile 验证码** 开关
+5. 输入您的 Cloudflare Turnstile 站点密钥
+6. 保存设置
+
+#### 获取 Turnstile 站点密钥
+
+1. 访问 [Cloudflare Turnstile 控制台](https://dash.cloudflare.com/?to=/:account/turnstile)
+2. 登录您的 Cloudflare 账户
+3. 点击 **添加站点**
+4. 选择 **Widget 类型** 为 **托管**
+5. 输入您的域名
+6. 接受服务条款
+7. 复制 **站点密钥** 和 **密钥对**
+
+#### 延迟加载功能
+
+Turnstile 验证码采用延迟加载技术：
+- 初始访问登录页面时，不会加载验证码相关资源
+- 只有在用户点击登录按钮后，才会加载并显示验证码
+- 验证成功后，表单会自动提交
+- 如果用户修改用户名或密码，验证码会自动隐藏，下次点击登录时重新显示
+
+这种设计提高了页面加载速度，并优化了用户体验。
 
 ### 跟踪代码
 

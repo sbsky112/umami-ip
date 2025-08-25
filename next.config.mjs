@@ -20,10 +20,12 @@ const trackerScriptURL = process.env.TRACKER_SCRIPT_URL;
 const contentSecurityPolicy = [
   `default-src 'self'`,
   `img-src * data:`,
-  `script-src 'self' 'unsafe-eval' 'unsafe-inline'`,
+  `script-src 'self' 'unsafe-eval' 'unsafe-inline' https://challenges.cloudflare.com`,
   `style-src 'self' 'unsafe-inline'`,
-  `connect-src 'self' api.umami.is cloud.umami.is`,
+  `connect-src 'self' api.umami.is cloud.umami.is https://challenges.cloudflare.com`,
+  `frame-src 'self' https://challenges.cloudflare.com`,
   `frame-ancestors 'self' ${frameAncestors}`,
+  `prefetch-src 'self' https://challenges.cloudflare.com`,
 ];
 
 const defaultHeaders = [

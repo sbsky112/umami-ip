@@ -8,6 +8,8 @@ import { parseRequest } from '@/lib/request';
 import { saveAuth } from '@/lib/auth';
 import { secret } from '@/lib/crypto';
 import { ROLES } from '@/lib/constants';
+import { verifyTurnstileToken } from '@/lib/turnstile';
+import { getTurnstileSettings } from '@/queries/settings';
 import debug from 'debug';
 
 const log = debug('umami:login');
@@ -28,6 +30,7 @@ export async function POST(request: Request) {
     const schema = z.object({
       username: z.string().min(1, 'Username is required'),
       password: z.string().min(1, 'Password is required'),
+      turnstileToken: z.string().optional(),
     });
 
     const { body, error } = await parseRequest(request, schema, { skipAuth: true });
@@ -36,9 +39,29 @@ export async function POST(request: Request) {
       return error();
     }
 
-    const { username, password } = body;
+    const { username, password, turnstileToken } = body;
 
     log(`Login attempt for username: ${username}`);
+
+    // Verify Turnstile token if enabled
+    const clientIp =
+      request.headers.get('x-forwarded-for') || request.headers.get('x-real-ip') || 'unknown';
+
+    // Check if Turnstile is enabled
+    const settings = await getTurnstileSettings();
+
+    if (settings.enabled) {
+      if (!turnstileToken) {
+        log(`Turnstile token missing for user: ${username}`);
+        return unauthorized('CAPTCHA verification required');
+      }
+
+      const isValidTurnstile = await verifyTurnstileToken(turnstileToken, clientIp);
+      if (!isValidTurnstile) {
+        log(`Turnstile verification failed for user: ${username}`);
+        return unauthorized('CAPTCHA verification failed');
+      }
+    }
 
     // Check if database is accessible
     let user;

@@ -31,3 +31,8 @@
   flex: 1;
   justify-content: center;
 }
+
+.turnstileContainer {
+  margin-top: 16px;
+  margin-bottom: 16px;
+}
