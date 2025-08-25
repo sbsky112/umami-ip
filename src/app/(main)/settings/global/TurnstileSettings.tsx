@@ -4,6 +4,7 @@ import { Form, FormRow, FormInput, FormButtons, TextField, SubmitButton } from '
 import { Switch } from '@/components/Switch';
 import { useApi, useMessages } from '@/components/hooks';
 import { useState, useEffect } from 'react';
+import { useToasts } from 'react-basics';
 
 interface ITurnstileSettings {
   enabled: boolean;
@@ -12,8 +13,9 @@ interface ITurnstileSettings {
 }
 
 export default function TurnstileSettings() {
-  const { formatMessage, labels } = useMessages();
+  const { formatMessage, labels, messages } = useMessages();
   const { get, post, useQuery, useMutation } = useApi();
+  const { showToast } = useToasts();
   const { data: settings, isLoading } = useQuery({
     queryKey: ['turnstile-settings'],
     queryFn: () => get('/settings/turnstile'),
@@ -26,6 +28,7 @@ export default function TurnstileSettings() {
   const [enabled, setEnabled] = useState<boolean>(false);
   const [siteKey, setSiteKey] = useState<string>('');
   const [secretKey, setSecretKey] = useState<string>('');
+  const [saveStatus, setSaveStatus] = useState<'idle' | 'saving' | 'success' | 'error'>('idle');
 
   useEffect(() => {
     if (settings) {
@@ -36,6 +39,8 @@ export default function TurnstileSettings() {
   }, [settings]);
 
   const handleSubmit = async (data: any) => {
+    setSaveStatus('saving');
+    
     mutate(
       {
         enabled: enabled,
@@ -44,8 +49,19 @@ export default function TurnstileSettings() {
       },
       {
         onSuccess: () => {
-          // Settings saved successfully
-          console.log('Turnstile settings saved successfully');
+          showToast({ message: formatMessage(messages.saved), variant: 'success' });
+          setSaveStatus('success');
+          // 2秒后重置状态
+          setTimeout(() => setSaveStatus('idle'), 2000);
+        },
+        onError: (error: any) => {
+          showToast({ 
+            message: error?.message || formatMessage(messages.error), 
+            variant: 'error' 
+          });
+          setSaveStatus('error');
+          // 2秒后重置状态
+          setTimeout(() => setSaveStatus('idle'), 2000);
         },
       },
     );
@@ -94,9 +110,10 @@ export default function TurnstileSettings() {
       )}
 
       <FormButtons>
-        <SubmitButton variant="primary" disabled={isPending}>
-          {isPending ? 'Saving...' : formatMessage(labels.save)}
-          {isSuccess && ' ✓'}
+        <SubmitButton variant="primary" disabled={saveStatus === 'saving'}>
+          {saveStatus === 'saving' ? 'Saving...' : formatMessage(labels.save)}
+          {saveStatus === 'success' && ' ✓'}
+          {saveStatus === 'error' && ' ✗'}
         </SubmitButton>
       </FormButtons>
     </Form>

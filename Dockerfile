@@ -18,10 +18,13 @@ ARG BASE_PATH
 
 ENV DATABASE_TYPE=$DATABASE_TYPE
 ENV BASE_PATH=$BASE_PATH
-
 ENV NEXT_TELEMETRY_DISABLED=1
 
-RUN npm run build-docker
+# Copy MySQL schema file
+RUN cp db/mysql/schema.prisma prisma/schema.prisma
+
+# Build the application (skip init-db since we don't have a real database during build)
+RUN npm run build-db && npm run build-tracker && npm run build-geo && npm run build-app
 
 # Production image, copy all the files and run next
 FROM node:22-alpine AS runner
@@ -47,8 +50,13 @@ RUN pnpm add npm-run-all dotenv prisma@6.7.0
 RUN chown -R nextjs:nodejs node_modules/.pnpm/
 
 COPY --from=builder --chown=nextjs:nodejs /app/public ./public
-COPY --from=builder /app/prisma ./prisma
+COPY --from=builder --chown=nextjs:nodejs /app/db ./db
+COPY --from=builder --chown=nextjs:nodejs /app/prisma ./prisma
 COPY --from=builder /app/scripts ./scripts
+
+# Ensure correct schema is in place and generate Prisma client
+RUN cp db/mysql/schema.prisma prisma/schema.prisma && \
+    npx prisma generate
 
 # Automatically leverage output traces to reduce image size
 # https://nextjs.org/docs/advanced-features/output-file-tracing

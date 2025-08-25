@@ -21,7 +21,7 @@
 ### 先决条件
 
 - Node.js 18+
-- 数据库（PostgreSQL 或MySQL)
+- MySQL 数据库
 
 ### 安装
 
@@ -42,8 +42,8 @@ cp .env.example .env
 ```
 使用你的数据库配置编辑 `.env` 文件：
 ```
-DATABASE_URL=postgresql://username:password@localhost:5432/umami
-DATABASE_TYPE=postgresql
+DATABASE_URL=mysql://username:password@localhost:3306/umami
+DATABASE_TYPE=mysql
 APP_SECRET=your-secret-key
 ```
 
@@ -61,18 +61,6 @@ npm start
 
 ### Docker 部署
 
-#### PostgreSQL
-```bash
-docker run -d \
---name umami \
--p 3000:3000 \
--e DATABASE_URL=postgresql://用户名:密码@主机:端口/数据库 \
--e DATABASE_TYPE=postgresql \
--e APP_SECRET=你的密钥 \
-umamisoftware/umami:postgresql-latest
-```
-
-#### MySQL
 ```bash
 docker run -d \
 --name umami \
@@ -88,7 +76,7 @@ umamisoftware/umami:mysql-latest
 ### 环境变量
 
 - `DATABASE_URL`：数据库连接字符串
-- `DATABASE_TYPE`：数据库类型（postgresql 或 mysql）
+- `DATABASE_TYPE`：数据库类型（mysql）
 - `APP_SECRET`：用于签名会话的密钥
 - `DISABLE_LOGIN`：禁用登录页面（默认值：false）
 - `FORCE_SSL`：强制使用 HTTPS（默认值：false）

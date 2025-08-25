@@ -35,17 +35,21 @@ export async function getTurnstileSettings(): Promise<TurnstileSettings> {
     };
   }
 
-  return setting.value as TurnstileSettings;
+  // Parse JSON string if it's a string
+  return typeof setting.value === 'string' ? JSON.parse(setting.value) : setting.value;
 }
 
 export async function updateSetting(key: string, value: any): Promise<Setting> {
+  // Convert value to JSON string if it's an object
+  const stringValue = typeof value === 'object' ? JSON.stringify(value) : value;
+  
   return prisma.client.setting.upsert({
     where: { key },
-    update: { value, updatedAt: new Date() },
+    update: { value: stringValue, updatedAt: new Date() },
     create: {
       id: crypto.randomUUID(),
       key,
-      value,
+      value: stringValue,
       createdAt: new Date(),
       updatedAt: new Date(),
     },

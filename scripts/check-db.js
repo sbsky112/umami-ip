@@ -4,6 +4,8 @@ const { PrismaClient } = require('@prisma/client');
 const chalk = require('chalk');
 const { execSync } = require('child_process');
 const semver = require('semver');
+const fs = require('fs');
+const path = require('path');
 
 if (process.env.SKIP_DB_CHECK) {
   console.log('Skipping database check.');
@@ -83,9 +85,42 @@ async function checkV1Tables() {
 
 async function applyMigration() {
   if (!process.env.SKIP_DB_MIGRATION) {
-    console.log(execSync('prisma migrate deploy').toString());
-
-    success('Database is up to date.');
+    try {
+      console.log(execSync('prisma migrate deploy').toString());
+      success('Database is up to date.');
+    } catch (e) {
+      // 如果数据库是空的，需要 baseline
+      if (e.message.includes('P3005') || e.message.includes('database schema is not empty')) {
+        console.log('Database schema is not empty, checking if tables were created by init-db...');
+        
+        // 检查是否有表
+        const tables = await prisma.$queryRaw`SHOW TABLES`;
+        const tableNames = tables.map(t => Object.values(t)[0]).filter(t => t !== '_prisma_migrations');
+        
+        if (tableNames.length > 0) {
+          // 如果有表，说明 init-db 已经创建了表，我们需要 baseline
+          console.log('Tables found, creating baseline...');
+          // 获取所有迁移并标记为已应用
+          
+          const migrationsDir = path.join(__dirname, '..', 'prisma', 'migrations');
+          const migrationDirs = fs.readdirSync(migrationsDir)
+            .filter(dir => /^\d{14}_/.test(dir))
+            .sort();
+          
+          for (const dir of migrationDirs) {
+            execSync(`npx prisma migrate resolve --applied ${dir}`, { stdio: 'inherit' });
+          }
+          success('Database baseline created.');
+        } else {
+          // 如果没有表，删除可能的 _prisma_migrations 表并重新开始
+          await prisma.$executeRaw`DROP TABLE IF EXISTS _prisma_migrations`;
+          console.log('Cleaned up migration table, you can run build again.');
+          process.exit(0);
+        }
+      } else {
+        throw e;
+      }
+    }
   }
 }
 
