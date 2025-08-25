@@ -48,6 +48,7 @@ RUN chown -R nextjs:nodejs node_modules/.pnpm/
 
 COPY --from=builder --chown=nextjs:nodejs /app/public ./public
 COPY --from=builder /app/prisma ./prisma
+COPY --from=builder /app/db ./db
 COPY --from=builder /app/scripts ./scripts
 
 # Automatically leverage output traces to reduce image size
