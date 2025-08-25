@@ -13,7 +13,7 @@ WORKDIR /app
 COPY --from=deps /app/node_modules ./node_modules
 COPY . .
 
-ARG DATABASE_TYPE
+ARG DATABASE_TYPE=postgresql
 ARG BASE_PATH
 
 ENV DATABASE_TYPE=$DATABASE_TYPE

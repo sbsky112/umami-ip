@@ -7,45 +7,40 @@
 
 require('dotenv').config();
 const { PrismaClient } = require('@prisma/client');
-const fs = require('fs');
-const path = require('path');
 
 const prisma = new PrismaClient();
 
 async function runMigration() {
   try {
-    // 检查是否已存在 settings 表
-    try {
-      await prisma.$queryRaw`SELECT 1 FROM setting LIMIT 1`;
-      console.log('Settings table already exists.');
-      return;
-    } catch (e) {
-      // 表不存在，继续创建
-      console.log('Settings table does not exist, creating...');
-    }
-
-    // 获取数据库类型
-    const databaseType = process.env.DATABASE_TYPE || 
-      (process.env.DATABASE_URL?.startsWith('postgres') ? 'postgresql' : 'mysql');
-
-    // 读取迁移文件
-    const migrationFile = path.join(__dirname, '..', 'db', databaseType, 'migrations', '20240824_add_settings_table.sql');
+    console.log('Running Prisma migration for settings table...');
     
-    if (!fs.existsSync(migrationFile)) {
-      throw new Error(`Migration file not found: ${migrationFile}`);
-    }
-
-    const sql = fs.readFileSync(migrationFile, 'utf8');
-    
-    // 执行迁移
-    await prisma.$executeRawUnsafe(sql);
+    // 使用 Prisma 执行原始 SQL
+    await prisma.$executeRaw`
+      CREATE TABLE IF NOT EXISTS "setting" (
+        "setting_id" UUID DEFAULT gen_random_uuid() PRIMARY KEY,
+        "key" VARCHAR(100) UNIQUE NOT NULL,
+        "value" JSONB,
+        "created_at" TIMESTAMPTZ(6) DEFAULT NOW(),
+        "updated_at" TIMESTAMPTZ(6) DEFAULT NOW()
+      )
+    `;
     
     console.log('Settings table created successfully.');
     
-    // 插入默认的 Turnstile 设置
-    if (databaseType === 'postgresql') {
+    // 创建索引
+    try {
       await prisma.$executeRaw`
-        INSERT INTO setting (setting_id, key, value, created_at, updated_at)
+        CREATE UNIQUE INDEX IF NOT EXISTS "setting_key_key" ON "setting"("key")
+      `;
+      console.log('Index created successfully.');
+    } catch (e) {
+      console.log('Index might already exist:', e.message);
+    }
+    
+    // 插入默认的 Turnstile 设置
+    try {
+      await prisma.$executeRaw`
+        INSERT INTO "setting" (setting_id, key, value, created_at, updated_at)
         VALUES (
           gen_random_uuid(),
           'turnstile',
@@ -55,23 +50,11 @@ async function runMigration() {
         )
         ON CONFLICT (key) DO NOTHING;
       `;
-    } else {
-      // MySQL
-      const uuid = require('crypto').randomUUID();
-      await prisma.$executeRaw`
-        INSERT INTO setting (setting_id, key, value, created_at, updated_at)
-        VALUES (
-          ${uuid},
-          'turnstile',
-          '{"enabled": false, "siteKey": ""}',
-          NOW(),
-          NOW()
-        )
-        ON DUPLICATE KEY UPDATE key = key;
-      `;
+      
+      console.log('Default Turnstile settings inserted.');
+    } catch (e) {
+      console.log('Default settings might already exist:', e.message);
     }
-    
-    console.log('Default Turnstile settings inserted.');
     
   } catch (error) {
     console.error('Migration failed:', error.message);
